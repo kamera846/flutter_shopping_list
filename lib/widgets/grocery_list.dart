@@ -30,42 +30,49 @@ class _GroceryListState extends State<GroceryList> {
     final url = Uri.https(
         'my-testing-project-17d76-default-rtdb.firebaseio.com',
         'shopping-list.json');
-    final response = await http.get(url);
 
-    if (response.statusCode >= 400) {
-      setState(() {
-        _error = 'Failed to fetch data. Please try again later.';
-      });
-    }
+    try {
+      final response = await http.get(url);
+      if (response.statusCode >= 400) {
+        setState(() {
+          _error = 'Failed to fetch data. Please try again later.';
+        });
+      }
 
-    if (response.body == 'null') {
+      if (response.body == 'null') {
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+
+      final Map<String, dynamic> listData = json.decode(response.body);
+      final List<GroceryItem> loadedItems = [];
+
+      for (final item in listData.entries) {
+        final category = categories.entries
+            .firstWhere(
+                (catItem) => catItem.value.name == item.value['category'])
+            .value;
+        loadedItems.add(
+          GroceryItem(
+            id: item.key,
+            name: item.value['name'],
+            quantity: item.value['quantity'],
+            category: category,
+          ),
+        );
+      }
+
       setState(() {
+        _groceryItems = loadedItems;
         isLoading = false;
       });
-      return;
+    } catch (e) {
+      setState(() {
+        _error = 'Something when wrong!. Please try again later.';
+      });
     }
-
-    final Map<String, dynamic> listData = json.decode(response.body);
-    final List<GroceryItem> loadedItems = [];
-
-    for (final item in listData.entries) {
-      final category = categories.entries
-          .firstWhere((catItem) => catItem.value.name == item.value['category'])
-          .value;
-      loadedItems.add(
-        GroceryItem(
-          id: item.key,
-          name: item.value['name'],
-          quantity: item.value['quantity'],
-          category: category,
-        ),
-      );
-    }
-
-    setState(() {
-      _groceryItems = loadedItems;
-      isLoading = false;
-    });
   }
 
   void _addItem() async {
@@ -169,7 +176,7 @@ class _GroceryListState extends State<GroceryList> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Uh oh ... something happen!',
+              'Uh oh ...!',
               style: Theme.of(context).textTheme.headlineSmall!.copyWith(
                     color: Theme.of(context).colorScheme.onBackground,
                   ),
