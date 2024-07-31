@@ -17,6 +17,7 @@ class GroceryList extends StatefulWidget {
 
 class _GroceryListState extends State<GroceryList> {
   List<GroceryItem> _groceryItems = [];
+  var isLoading = true;
 
   @override
   void initState() {
@@ -31,6 +32,7 @@ class _GroceryListState extends State<GroceryList> {
     final response = await http.get(url);
     final Map<String, dynamic> listData = json.decode(response.body);
     final List<GroceryItem> _loadedItems = [];
+
     for (final item in listData.entries) {
       final category = categories.entries
           .firstWhere((catItem) => catItem.value.name == item.value['category'])
@@ -44,8 +46,10 @@ class _GroceryListState extends State<GroceryList> {
         ),
       );
     }
+
     setState(() {
       _groceryItems = _loadedItems;
+      isLoading = false;
     });
   }
 
@@ -93,6 +97,12 @@ class _GroceryListState extends State<GroceryList> {
         ],
       ),
     );
+
+    if (isLoading) {
+      content = const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
 
     if (_groceryItems.isNotEmpty) {
       content = ListView.builder(
