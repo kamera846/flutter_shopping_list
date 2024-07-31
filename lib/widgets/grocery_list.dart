@@ -18,6 +18,7 @@ class GroceryList extends StatefulWidget {
 class _GroceryListState extends State<GroceryList> {
   List<GroceryItem> _groceryItems = [];
   var isLoading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -30,14 +31,21 @@ class _GroceryListState extends State<GroceryList> {
         'my-testing-project-17d76-default-rtdb.firebaseio.com',
         'shopping-list.json');
     final response = await http.get(url);
+
+    if (response.statusCode >= 400) {
+      setState(() {
+        _error = 'Failed to fetch data. Please try again later.';
+      });
+    }
+
     final Map<String, dynamic> listData = json.decode(response.body);
-    final List<GroceryItem> _loadedItems = [];
+    final List<GroceryItem> loadedItems = [];
 
     for (final item in listData.entries) {
       final category = categories.entries
           .firstWhere((catItem) => catItem.value.name == item.value['category'])
           .value;
-      _loadedItems.add(
+      loadedItems.add(
         GroceryItem(
           id: item.key,
           name: item.value['name'],
@@ -48,7 +56,7 @@ class _GroceryListState extends State<GroceryList> {
     }
 
     setState(() {
-      _groceryItems = _loadedItems;
+      _groceryItems = loadedItems;
       isLoading = false;
     });
   }
@@ -123,6 +131,29 @@ class _GroceryListState extends State<GroceryList> {
               _groceryItems[index].quantity.toString(),
             ),
           ),
+        ),
+      );
+    }
+
+    if (_error != null) {
+      content = Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Uh oh ... something happen!',
+              style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                    color: Theme.of(context).colorScheme.onBackground,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _error!,
+              style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                    color: Theme.of(context).colorScheme.onBackground,
+                  ),
+            ),
+          ],
         ),
       );
     }
