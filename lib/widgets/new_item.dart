@@ -21,13 +21,13 @@ class _NewItemState extends State<NewItem> {
   var _enteredQuantity = 1;
   var _selectedCategory = categories[Categories.carbs]!;
 
-  void _saveItem() {
+  void _saveItem() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       final url = Uri.https(
           'my-testing-project-17d76-default-rtdb.firebaseio.com',
           'shopping-list.json');
-      http.post(
+      final response = await http.post(
         url,
         headers: {
           'Content-Type': 'applicaiton/json',
@@ -40,6 +40,15 @@ class _NewItemState extends State<NewItem> {
           },
         ),
       );
+
+      print(response.body);
+      print(response.statusCode);
+
+      if (!context.mounted) {
+        return;
+      }
+
+      Navigator.of(context).pop();
       // Navigator.of(context).pop(GroceryItem(
       //   id: DateTime.now().toString(),
       //   name: _enteredName,
